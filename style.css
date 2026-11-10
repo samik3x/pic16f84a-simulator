@@ -279,28 +279,6 @@ body {
     transition: background 0.2s ease, border-color 0.2s ease;
 }
 
-.author-credits-footer {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    font-size: 11px;
-    color: var(--text-muted);
-    font-family: var(--font-mono);
-    padding: 8px 12px;
-    border-radius: 6px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    margin-top: 4px;
-    text-align: center;
-    user-select: none;
-    transition: background 0.2s ease, border-color 0.2s ease;
-}
-
-.author-credits-footer strong {
-    color: var(--text-primary);
-    font-weight: 600;
-}
 
 .pane-header {
     display: flex;

@@ -1,9 +1,10 @@
 # PRM - Webový simulátor mikropočítačov (PIC16F84A)
 
-Webová aplikácia na simuláciu mikrokontroléra PIC16F84A. Projekt slúži ako pomôcka pri výučbe programovania mikropočítačov na SPŠT.
+Webová aplikácia na simuláciu mikrokontroléra Microchip PIC16F84A a vývojovej dosky s integrovaným C kompilátorom (XC8 syntax). Projekt slúži ako pomôcka pri výučbe programovania mikropočítačov na SPŠT.
 
 Aplikácia je hostovaná na: **[www.prmspst.eu](https://www.prmspst.eu)**
 
+Autor: Samuel Snopko | III.D | SPST
 
 ---
 
