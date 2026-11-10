@@ -620,6 +620,30 @@ document.addEventListener('DOMContentLoaded', () => {
     btnStep.addEventListener('click', handleStep);
     btnStop.addEventListener('click', handleStop);
 
+    // Clear Console Logs
+    const btnClearConsole = document.getElementById('btnClearConsole');
+    if (btnClearConsole) {
+        btnClearConsole.addEventListener('click', () => {
+            compilerLogsList.innerHTML = `
+                <div class="console-log-item info">
+                    <span>ℹ️</span>
+                    <span>Konzola bola vyčistená.</span>
+                </div>
+            `;
+            errorCountBadge.textContent = '0';
+            errorCountBadge.classList.remove('error');
+        });
+    }
+
+    // Cursor position indicator (Ln X, Col Y)
+    const cursorPosIndicator = document.getElementById('cursorPosIndicator');
+    if (editor && cursorPosIndicator) {
+        editor.on('cursorActivity', () => {
+            const cur = editor.getCursor();
+            cursorPosIndicator.textContent = `Ln ${cur.line + 1}, Col ${cur.ch + 1}`;
+        });
+    }
+
     // Activity Rail Quick Run
     railBtnQuickRun.addEventListener('click', handleRun);
 
