@@ -6,7 +6,8 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = 3000;
+const PORT = parseInt(process.env.PORT, 10) || 3000;
+const HOST = '0.0.0.0';
 const BASE_DIR = __dirname;
 
 const MIME_TYPES = {
@@ -53,9 +54,9 @@ const server = http.createServer((req, res) => {
     });
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, HOST, () => {
     console.log(`\n======================================================`);
-    console.log(`🚀 PIC16F84A Web Simulátor beží na:`);
-    console.log(`   http://localhost:${PORT}`);
+    console.log(`🚀 PIC16F84A Web Simulátor beží na porte ${PORT}`);
+    console.log(`   Lokálna adresa: http://localhost:${PORT}`);
     console.log(`======================================================\n`);
 });
