@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIC16F84A Web Simulátor & C Kompilátor</title>
+
+    <!-- CodeMirror Assets (offline vendor with CDN fallback) -->
+    <link rel="stylesheet" href="vendor/codemirror.min.css">
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Offline CodeMirror scripts -->
+    <script src="vendor/codemirror.min.js"></script>
+    <script src="vendor/clike.min.js"></script>
+    <script src="vendor/active-line.min.js"></script>
+    <script src="vendor/matchbrackets.min.js"></script>
+    <script src="vendor/closebrackets.min.js"></script>
+</head>
+<body>
+    <!-- Top Header -->
+    <header class="app-header">
+        <div class="brand-section">
+            <div class="brand-logo">PRM</div>
+            <div class="brand-title">
+                Programovanie mikropočítačov web simulátor
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <!-- Výber motívu pozadia: Biele, Čierne, Systémové -->
+            <div class="theme-switch-group">
+                <label for="themeSelector" class="theme-switch-label" title="Zmeniť motív pozadia stránky">
+                    <span>🎨 Vzhľad:</span>
+                </label>
+                <select id="themeSelector" class="select-control theme-select" title="Zvoliť motív (Biele, Čierne, Systémové)">
+                    <option value="light">☀️ Biele pozadie</option>
+                    <option value="dark">🌙 Čierne pozadie</option>
+                    <option value="system">💻 Systémové pozadie</option>
+                </select>
+            </div>
+
+            <!-- Tlačidlá vpravo hore -->
+            <button id="btnResetTemplate" class="btn btn-outline btn-sm" title="Obnoviť kód na pôvodný template.c">
+                ↺ template.c
+            </button>
+            <button id="btnCopyCode" class="btn btn-outline btn-sm" title="Kopírovať kód do schránky">
+                📋 Kopírovať
+            </button>
+            <button id="btnDownloadCode" class="btn btn-outline btn-sm" title="Stiahnuť súbor main.c">
+                📥 Stiahnuť .c
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="main-layout">
+        <!-- Left Hardware Pane (Board Simulator) -->
+        <aside class="hardware-pane">
+            <div class="pane-header">
+                <div class="pane-title">
+                    <span>⚡ Hardvérová vývojová doska</span>
+                </div>
+                <div class="toggle-switch-group">
+                    <span style="font-size: 11px; color: var(--text-secondary);">Farba LED:</span>
+                    <select id="ledColorPicker" class="select-control" style="font-size: 11px; padding: 2px 6px;">
+                        <option value="yellow" selected>Žltá</option>
+                        <option value="red">Červená</option>
+                        <option value="green">Zelená</option>
+                        <option value="blue">Modrá</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Top PCB: Buttons TL1 - TL5 (Input Module) -->
+            <div class="pcb-board">
+                <div class="pcb-header">
+                    <div class="pcb-title">VSTUPNÝ MODUL TLAČIDIEL</div>
+                </div>
+
+                <div class="buttons-module-body">
+                    <!-- Tlačidlá zľava doprava: TL1 až TL5 -->
+                    <div class="button-item">
+                        <span class="button-label" style="color: #fef08a;">TL1</span>
+                        <span class="button-pin-label">RA0</span>
+                        <button id="btn_TL1" class="tactile-btn" data-button="TL1" title="TL1 (RA0) - Kláves 1"></button>
+                    </div>
+
+                    <div class="button-item">
+                        <span class="button-label">TL2</span>
+                        <span class="button-pin-label">RA1</span>
+                        <button id="btn_TL2" class="tactile-btn" data-button="TL2" title="TL2 (RA1) - Kláves 2"></button>
+                    </div>
+
+                    <div class="button-item">
+                        <span class="button-label">TL3</span>
+                        <span class="button-pin-label">RA2</span>
+                        <button id="btn_TL3" class="tactile-btn" data-button="TL3" title="TL3 (RA2) - Kláves 3"></button>
+                    </div>
+
+                    <div class="button-item">
+                        <span class="button-label">TL4</span>
+                        <span class="button-pin-label">RA3</span>
+                        <button id="btn_TL4" class="tactile-btn" data-button="TL4" title="TL4 (RA3) - Kláves 4"></button>
+                    </div>
+
+                    <div class="button-item">
+                        <span class="button-label">TL5</span>
+                        <span class="button-pin-label">RA4</span>
+                        <button id="btn_TL5" class="tactile-btn" data-button="TL5" title="TL5 (RA4) - Kláves 5"></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middle PCB: Microcontroller PIC16F84A & Modules A and B (Matching sketch) -->
+            <div class="pcb-board">
+                <div class="pcb-header">
+                    <div class="pcb-title">PIC16F84A RIADIACI MODUL</div>
+                </div>
+
+                <div class="core-module-body">
+                    <!-- Left Socket: MODUL A (PORT A) -->
+                    <div class="header-socket">
+                        <div class="socket-label">MODUL A</div>
+                        <div class="socket-pins">
+                            <div class="pin-row"><span>RA0 (TL1)</span><div id="pin_RA0" class="pin-indicator"></div></div>
+                            <div class="pin-row"><span>RA1 (TL2)</span><div id="pin_RA1" class="pin-indicator"></div></div>
+                            <div class="pin-row"><span>RA2 (TL3)</span><div id="pin_RA2" class="pin-indicator"></div></div>
+                            <div class="pin-row"><span>RA3 (TL4)</span><div id="pin_RA3" class="pin-indicator"></div></div>
+                            <div class="pin-row"><span>RA4 (TL5)</span><div id="pin_RA4" class="pin-indicator"></div></div>
+                        </div>
+                    </div>
+
+                    <!-- Center DIP-18 IC Package: PIC16F84A -->
+                    <div class="ic-package">
+                        <div class="ic-notch"></div>
+                        <div class="ic-label">
+                            <div class="ic-brand">MICROCHIP</div>
+                            <div class="ic-model">PIC16F84A</div>
+                            <div class="ic-extra">04/P DIP-18</div>
+                        </div>
+                        <div class="crystal-oscillator">
+                            <div class="xtal-can"></div>
+                            <span>4.0 MHz</span>
+                        </div>
+                        <button id="btnMclrReset" class="ic-reset-btn" title="Hardware Reset mikroprocesora">
+                            MCLR RESET
+                        </button>
+                    </div>
+
+                    <!-- Right Socket: MODUL B (PORT B) -->
+                    <div class="header-socket">
+                        <div class="socket-label">MODUL B</div>
+                        <div class="socket-pins">
+                            <div class="pin-row"><div id="pin_RB0" class="pin-indicator"></div><span>RB0 (LED1)</span></div>
+                            <div class="pin-row"><div id="pin_RB1" class="pin-indicator"></div><span>RB1 (LED2)</span></div>
+                            <div class="pin-row"><div id="pin_RB2" class="pin-indicator"></div><span>RB2 (LED3)</span></div>
+                            <div class="pin-row"><div id="pin_RB3" class="pin-indicator"></div><span>RB3 (LED4)</span></div>
+                            <div class="pin-row"><div id="pin_RB4" class="pin-indicator"></div><span>RB4 (LED5)</span></div>
+                            <div class="pin-row"><div id="pin_RB5" class="pin-indicator"></div><span>RB5 (LED6)</span></div>
+                            <div class="pin-row"><div id="pin_RB6" class="pin-indicator"></div><span>RB6 (LED7)</span></div>
+                            <div class="pin-row"><div id="pin_RB7" class="pin-indicator"></div><span>RB7 (LED8)</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom PCB: 8 LEDs in a horizontal row (LED 1 on left to LED 8 on right) -->
+            <div class="pcb-board">
+                <div class="pcb-header">
+                    <div class="pcb-title">VÝSTUPNÝ MODUL LED DIÓD</div>
+                </div>
+
+                <!-- 8 LEDs horizontally arranged: LED 1 is leftmost as specified by user -->
+                <div class="leds-container">
+                    <!-- LED 1 -->
+                    <div class="led-col">
+                        <span class="led-label">LED 1</span>
+                        <div id="led_0" class="led-lamp" title="LED 1 (pin RB0)"></div>
+                        <span id="ledval_0" class="led-val">0</span>
+                        <span class="led-pin">RB0</span>
+                    </div>
+
+                    <!-- LED 2 -->
+                    <div class="led-col">
+                        <span class="led-label">LED 2</span>
+                        <div id="led_1" class="led-lamp" title="LED 2 (pin RB1)"></div>
+                        <span id="ledval_1" class="led-val">0</span>
+                        <span class="led-pin">RB1</span>
+                    </div>
+
+                    <!-- LED 3 -->
+                    <div class="led-col">
+                        <span class="led-label">LED 3</span>
+                        <div id="led_2" class="led-lamp" title="LED 3 (pin RB2)"></div>
+                        <span id="ledval_2" class="led-val">0</span>
+                        <span class="led-pin">RB2</span>
+                    </div>
+
+                    <!-- LED 4 -->
+                    <div class="led-col">
+                        <span class="led-label">LED 4</span>
+                        <div id="led_3" class="led-lamp" title="LED 4 (pin RB3)"></div>
+                        <span id="ledval_3" class="led-val">0</span>
+                        <span class="led-pin">RB3</span>
+                    </div>
+
+                    <!-- LED 5 -->
+                    <div class="led-col">
+                        <span class="led-label">LED 5</span>
+                        <div id="led_4" class="led-lamp" title="LED 5 (pin RB4)"></div>
+                        <span id="ledval_4" class="led-val">0</span>
+                        <span class="led-pin">RB4</span>
+                    </div>
+
+                    <!-- LED 6 -->
+                    <div class="led-col">
+                        <span class="led-label">LED 6</span>
+                        <div id="led_5" class="led-lamp" title="LED 6 (pin RB5)"></div>
+                        <span id="ledval_5" class="led-val">0</span>
+                        <span class="led-pin">RB5</span>
+                    </div>
+
+                    <!-- LED 7 -->
+                    <div class="led-col">
+                        <span class="led-label">LED 7</span>
+                        <div id="led_6" class="led-lamp" title="LED 7 (pin RB6)"></div>
+                        <span id="ledval_6" class="led-val">0</span>
+                        <span class="led-pin">RB6</span>
+                    </div>
+
+                    <!-- LED 8 -->
+                    <div class="led-col">
+                        <span class="led-label">LED 8</span>
+                        <div id="led_7" class="led-lamp" title="LED 8 (pin RB7)"></div>
+                        <span id="ledval_7" class="led-val">0</span>
+                        <span class="led-pin">RB7</span>
+                    </div>
+                </div>
+
+                <!-- PORTB Digital Value Display (Clean: HEX & BIN only) -->
+                <div class="led-register-summary">
+                    <span>PORTB:</span>
+                    <span>HEX: <strong id="portbHex" class="reg-val-highlight">0x00</strong></span>
+                    <span>BIN: <strong id="portbBin" class="reg-val-highlight">00000000</strong></span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center Vertical Activity Rail (Matching User Sketch) -->
+        <nav class="activity-rail">
+            <button id="railBtnEditor" class="rail-btn active" title="Editor kódu">
+                <span>&lt;/&gt;</span>
+                <span class="tooltip">Editor C kódu</span>
+            </button>
+            <button id="railBtnQuickRun" class="rail-btn" title="Rýchle spustenie programu">
+                <span style="color: #10b981;">▶</span>
+                <span class="tooltip">Spustiť program (F5)</span>
+            </button>
+            <button id="railBtnSettings" class="rail-btn" title="Nastavenia a klávesové skratky">
+                <span>⚙️</span>
+                <span class="tooltip">Nastavenia & Nápoveda</span>
+            </button>
+        </nav>
+
+        <!-- Right Pane: Code Editor & Execution Environment -->
+        <section class="editor-pane">
+            <!-- Toolbar for Code Execution -->
+            <div class="editor-toolbar">
+                <div class="toolbar-group">
+                    <button id="btnRun" class="btn btn-success" title="Spustiť program (Kláves F5)">
+                        <span>▶</span> Spustiť
+                    </button>
+                    <button id="btnPause" class="btn btn-outline" title="Pozastaviť beh programu" disabled>
+                        <span>⏸</span> Pozastaviť
+                    </button>
+                    <button id="btnStep" class="btn btn-outline" title="Vykonať jeden krok / príkaz (Kláves F10)">
+                        <span>⏭</span> Krok
+                    </button>
+                    <button id="btnStop" class="btn btn-danger" title="Zastaviť simuláciu a resetovať registre">
+                        <span>⏹</span> Zastaviť
+                    </button>
+                </div>
+
+                <div class="toolbar-group">
+                    <!-- Status indicator pill -->
+                    <div id="statusPill" class="status-pill">
+                        <span class="status-dot"></span>
+                        <span id="statusText">Pripravený</span>
+                    </div>
+
+                    <!-- Auto-scroll checkbox -->
+                    <label style="font-size: 11px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; color: var(--text-secondary); user-select: none;" title="Automaticky posúvať editor na bežiaci riadok (predvolene vypnuté, aby nebránilo scrollovaniu)">
+                        <input type="checkbox" id="chkAutoScroll" style="cursor: pointer;">
+                        <span>Sledovať riadok</span>
+                    </label>
+
+                    <!-- Simulation Speed Selector -->
+                    <div class="speed-select-group">
+                        <span>Rýchlosť:</span>
+                        <select id="speedSelector" class="select-control">
+                            <option value="1.0">1x (Reálny čas)</option>
+                            <option value="0.5">2x rýchlejšie</option>
+                            <option value="step-50">50 ms / krok</option>
+                            <option value="step-100" selected>100 ms / krok</option>
+                            <option value="step-250">250 ms / krok</option>
+                            <option value="step-500">500 ms / krok</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Code Editor Container (CodeMirror) -->
+            <div class="editor-container">
+                <textarea id="codeEditorArea"></textarea>
+            </div>
+
+            <!-- Bottom Panel: Console, Errors, Registers & Library -->
+            <div class="bottom-panel">
+                <div class="panel-tabs-bar">
+                    <div class="tabs-group">
+                        <button class="panel-tab active" data-tab="tabConsole">
+                            <span>Konzola & Kompilátor</span>
+                            <span id="errorCountBadge" class="badge-count">0</span>
+                        </button>
+                        <button class="panel-tab" data-tab="tabRegisters">
+                            <span>Live Registre</span>
+                        </button>
+                    </div>
+
+                    <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">
+                        PIC16F84A Core | 1 µs / Tcyc
+                    </div>
+                </div>
+
+                <div class="panel-content">
+                    <!-- Tab 1: Compiler Console & Error Diagnostics -->
+                    <div id="tabConsole" class="tab-pane active">
+                        <div id="compilerLogsList">
+                            <div class="console-log-item info">
+                                <span>ℹ️</span>
+                                <span>Pripravené na kompiláciu. Stlač <strong>[Spustiť]</strong> pre kompiláciu a beh kódu.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Live Registers Inspector -->
+                    <div id="tabRegisters" class="tab-pane">
+                        <div class="registers-grid">
+                            <!-- TRISA -->
+                            <div class="reg-card">
+                                <div class="reg-card-title">
+                                    <span>TRISA (Smer PORTA)</span>
+                                    <strong id="valTRISA">0x1F</strong>
+                                </div>
+                                <div class="bits-row" id="bitsTRISA"></div>
+                            </div>
+
+                            <!-- TRISB -->
+                            <div class="reg-card">
+                                <div class="reg-card-title">
+                                    <span>TRISB (Smer PORTB)</span>
+                                    <strong id="valTRISB">0xFF</strong>
+                                </div>
+                                <div class="bits-row" id="bitsTRISB"></div>
+                            </div>
+
+                            <!-- PORTA -->
+                            <div class="reg-card">
+                                <div class="reg-card-title">
+                                    <span>PORTA (Vstupy TL1-5)</span>
+                                    <strong id="valPORTA">0x00</strong>
+                                </div>
+                                <div class="bits-row" id="bitsPORTA"></div>
+                            </div>
+
+                            <!-- PORTB -->
+                            <div class="reg-card">
+                                <div class="reg-card-title">
+                                    <span>PORTB (Výstupy LED1-8)</span>
+                                    <strong id="valPORTB">0x00</strong>
+                                </div>
+                                <div class="bits-row" id="bitsPORTB"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Help & Settings Modal Dialog -->
+    <div id="helpModal" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title">⚙️ Nápoveda & Klávesové skratky</div>
+                <button id="btnCloseHelpModal" class="btn btn-outline btn-sm">✕</button>
+            </div>
+            <div class="modal-body">
+                <h4 style="margin-bottom: 6px;">Vzhľad & Pozadie simulátora:</h4>
+                <div class="modal-settings-box">
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <span style="font-size: 11px; font-weight: 600;">Motív pozadia:</span>
+                        <select id="modalThemeSelector" class="select-control">
+                            <option value="light">☀️ Biele pozadie</option>
+                            <option value="dark">🌙 Čierne pozadie</option>
+                            <option value="system">💻 Systémové pozadie</option>
+                        </select>
+                    </div>
+                </div>
+
+
+                <h4 style="margin-bottom: 6px;">Klávesové skratky pre tlačidlá:</h4>
+                <ul style="margin-left: 20px; margin-bottom: 14px;">
+                    <li><strong>Kláves 1</strong>: Stlačenie tlačidla TL1 (RA0)</li>
+                    <li><strong>Kláves 2</strong>: Stlačenie tlačidla TL2 (RA1)</li>
+                    <li><strong>Kláves 3</strong>: Stlačenie tlačidla TL3 (RA2)</li>
+                    <li><strong>Kláves 4</strong>: Stlačenie tlačidla TL4 (RA3)</li>
+                    <li><strong>Kláves 5</strong>: Stlačenie tlačidla TL5 (RA4)</li>
+                </ul>
+
+                <h4 style="margin-bottom: 6px;">Ovládanie simulácie:</h4>
+                <ul style="margin-left: 20px; margin-bottom: 14px;">
+                    <li><strong>F5</strong>: Spustiť program / Kompilovať</li>
+                    <li><strong>F10</strong>: Vykonanie jedného kroku (Krokovať)</li>
+                    <li><strong>Kliknutie na číslo riadku</strong>: Nastavenie bodu prerušenia (Breakpoint 🔴)</li>
+                </ul>
+
+                <h4 style="margin-bottom: 6px;">Zapojenie pinov PIC16F84A:</h4>
+                <ul style="margin-left: 20px;">
+                    <li><strong>PORTA (RA0 - RA4)</strong>: Vstupný modul s tlačidlami TL1 až TL5.</li>
+                    <li><strong>PORTB (RB0 - RB7)</strong>: Výstupný modul s 8 LED diódami (LED 1 vľavo = RB0, LED 8 vpravo = RB7).</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button id="btnDismissHelpModal" class="btn btn-primary btn-sm">Rozumiem</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Scripts -->
+    <script src="c_compiler.js"></script>
+    <script src="pic_emulator.js"></script>
+    <script src="examples.js"></script>
+    <script src="library.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

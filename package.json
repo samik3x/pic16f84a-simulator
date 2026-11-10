@@ -1,0 +1,22 @@
+{
+  "name": "pic16f84a-web-simulator",
+  "version": "1.0.0",
+  "description": "Programovanie mikropočítačov web simulátor - Interaktívny emulátor Microchip PIC16F84A s C kompilátorom a virtuálnou vývojovou doskou",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "pic16f84a",
+    "microchip",
+    "simulator",
+    "emulator",
+    "c-compiler",
+    "xc8",
+    "education",
+    "microcontroller",
+    "electronics"
+  ],
+  "author": "samko",
+  "license": "MIT"
+}
